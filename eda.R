@@ -1,0 +1,31 @@
+# Read in the data
+data <- read.csv("/Users/kimbente/Desktop/Computational Statistics/Assignment/drug_consumption.data", header = FALSE)
+d <- as.data.frame(d)
+class(d)
+dim(d)
+str(d)
+head(d)
+# Add column names
+columnnames <- c("ID", "Age", "Gender", "Education", "Country", "Ethnicity", "Nscore", "Escore", "Oscore", "Ascore", "Cscore", "Impulsive", "SS", "Alcohol", "Amphet", "Amyl", "Benzos", "Caff", "Cannabis", "Choc", "Coke", "Crack", "Ecstasy", "Heroin", "Ketamine", "Legalh", "LSD", "Meth", "Mushrooms", "Nicotine", "Semer", "VSA")
+setnames(d, columnnames)
+head(d)
+summary(d)
+labels(d)
+labels.drugs <- c("Alcohol", "Amphet", "Amyl", "Benzos", "Caff", "Cannabis", "Choc", "Coke", "Crack", "Ecstasy", "Heroin", "Ketamine", "Legalh", "LSD", "Meth", "Mushrooms", "Nicotine", "Semer", "VSA")
+predictors.general <- c("ID", "Age", "Gender", "Education", "Country", "Ethnicity")
+predictors.personality <- c("Nscore", "Escore", "Oscore", "Ascore", "Cscore", "Impulsive", "SS")
+predictors <- c(predictors.general, predictors.personality)
+#Exploring
+table(d$Alcohol)
+par(mfrow=c(2,2))
+plot(d$Alcohol)
+plot(d$Cannabis)
+plot(d$Choc)
+plot(d$Nicotine)
+#Illegeal
+par(mfrow=c(2,2))
+plot(d$Coke)
+plot(d$Crack)
+plot(d$Ecstasy)
+plot(d$Heroin)
+
