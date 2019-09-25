@@ -1,0 +1,65 @@
+---
+title: "Explore_KB"
+author: "Kim Bente"
+date: "24 9 2019"
+output: html_document
+---
+#STAT5003 Group Project
+##Drug Consumption Dataset
+
+** Reading in the data **
+
+```{r}
+data <- read.csv("/Users/kimbente/Desktop/Computational Statistics/Assignment/drug_consumption.data", header = FALSE)
+d <- as.data.frame(data)
+class(d)
+dim(d)
+str(d)
+head(d)
+```
+
+** Reading in the data **
+
+```{r}
+columnnames <- c("ID", "Age", "Gender", "Education", "Country", "Ethnicity", "Nscore", "Escore", "Oscore", "Ascore", "Cscore", "Impulsive", "SS", "Alcohol", "Amphet", "Amyl", "Benzos", "Caff", "Cannabis", "Choc", "Coke", "Crack", "Ecstasy", "Heroin", "Ketamine", "Legalh", "LSD", "Meth", "Mushrooms", "Nicotine", "Semer", "VSA")
+d <- setNames(d, columnnames)
+head(d)
+summary(d)
+```
+
+** Add column names **
+
+```{r}
+labels(d)
+labels.drugs <- c("Alcohol", "Amphet", "Amyl", "Benzos", "Caff", "Cannabis", "Choc", "Coke", "Crack", "Ecstasy", "Heroin", "Ketamine", "Legalh", "LSD", "Meth", "Mushrooms", "Nicotine", "Semer", "VSA")
+predictors.general <- c("ID", "Age", "Gender", "Education", "Country", "Ethnicity")
+predictors.personality <- c("Nscore", "Escore", "Oscore", "Ascore", "Cscore", "Impulsive", "SS")
+predictors <- c(predictors.general, predictors.personality)
+```
+
+** Clone dataset and remove liars **
+
+```{r}
+dc <- as.data.frame(d)
+dc[[1]]
+head(dc)
+class(dc)
+table(dc$Semer)
+#geting the indices of liars
+liars <- which(dc$Semer == "CL1" | dc$Semer == "CL2"| dc$Semer == "CL3" | dc$Semer == "CL4")
+print(liars)
+length(liars)
+dc[liars,]
+#removing the liars
+dim(dc)
+dc <- dc[-liars,]
+dim(dc)
+```
+
+** Combine classes **
+
+```{r}
+ghsgdh <- c("hi", "git")
+df <- c()
+```
+
