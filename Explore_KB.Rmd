@@ -59,7 +59,6 @@ dim(dc)
 ** Combine classes **
 
 ```{r}
-ghsgdh <- c("hi", "git")
-df <- c()
+change <- c()
 ```
 
