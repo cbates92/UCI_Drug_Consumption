@@ -16,6 +16,8 @@ class(d)
 dim(d)
 str(d)
 head(d)
+
+#small_change
 ```
 
 ** Reading in the data **
