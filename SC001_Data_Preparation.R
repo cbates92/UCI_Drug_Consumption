@@ -28,13 +28,17 @@ demographic_variables = c("age",
                           "country",
                           "ethnicity")
 
-pysch_variables = c("neuroticism",
+demographic_variables_recode = paste0(demographic_variables, "_recode")
+
+psych_variables = c("neuroticism",
                     "extraversion",
                     "openess",
                     "agreeableness",
                     "conscientiousness",
                     "impulsiveness",
                     "sensation")
+
+psych_variables_recode = paste0(psych_variables, "_recode")
 
 # define the variable names that relate to substance consumption
 usage_variables = c("alcohol", # N
@@ -87,7 +91,7 @@ setnames(drug_consumption,
          old = paste0("X", 1:32),
          new = c("id",
                  demographic_variables,
-                 pysch_variables,
+                 psych_variables,
                  usage_variables))
 
 # we use the function recode_variable (defined in script SC000_Initialisation.R) to recode each of our variables using our variable_mapping table (stored in Variable_Mappings.xlsx)
