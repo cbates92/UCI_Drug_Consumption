@@ -16,8 +16,3 @@ ggplot(drug_consumption[, .N, by = .(age_recode, education_recode)], aes(x = edu
   geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# TODO:
-
-# do some kmeans/hierarchial clustering analysis to group together observations with a similar set of pysch_variables
-
-# do some kmeans/hierarchial clustering analysis to find out what drugs show a usage pattern similar to heroin. Group these drugs together as our predicted case.
