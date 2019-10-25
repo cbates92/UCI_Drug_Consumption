@@ -1,5 +1,7 @@
 source("SC001_Data_Preparation.R")
 
+# careful, this one takes little while to generate.
+# TODO: will need to add something more useful to the other axis, possibly a simple correlation coefficient?
 ggplot(drug_consumption, aes(x = .panel_x, y = .panel_y, colour = gender_recode, fill = gender_recode)) + 
   geom_jitter(alpha = 0.4, size = 1) +
   geom_autodensity(alpha = 0.4, position = "identity") +
@@ -16,7 +18,6 @@ ggplot(drug_consumption[, .N, by = .(age_recode, education_recode)], aes(x = edu
 
 # TODO:
 
-# do some clustering analysis to find out what drugs show a usage pattern
-# similar to heroin. Group these drugs together as our predicted case.
+# do some kmeans/hierarchial clustering analysis to group together observations with a similar set of pysch_variables
 
-# we could probably use kmeans to do this clustering
+# do some kmeans/hierarchial clustering analysis to find out what drugs show a usage pattern similar to heroin. Group these drugs together as our predicted case.

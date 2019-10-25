@@ -77,7 +77,7 @@ usage_variables_nested_list = list(CL0 = paste0(usage_variables, "_CL0"),
                                    CL6 = paste0(usage_variables, "_CL6"))
 
 # then if we want all of these nest variables..
-usage_variables_nested_all = unname(unlist(usage_variables_nested))
+usage_variables_nested_all = unname(unlist(usage_variables_nested_list))
 
 #================================================================================================================================================================================================
 # let's actually start doing useful stuff...
