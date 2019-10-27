@@ -1,0 +1,93 @@
+---
+title: "pyramid"
+author: '490515558'
+date: "10/27/2019"
+output: html_document
+---
+
+```{r Animated graph fig.height = 8, fig.width = 8}
+#install.packages("gganimate")
+#install.packages("gifski")
+#install.packages("png")
+library(gganimate)
+options(gganimate.nframes = 38)
+
+#Creating a Dataframe with the values we need for the animated pyramid plot
+kims_plot = list()
+for (substance in usage_variables) {
+ output = drug_consumption[, j = .(count = .N), by = c("age_recode", substance)]
+ setnames(output, substance, "usage")
+ output[, substance := substance]
+ kims_plot[[length(kims_plot) + 1]] = output
+}
+kims_plot = rbindlist(kims_plot)
+
+
+#Defining the pyramid plot function
+pyramid_plot <- ggplot(kims_plot, aes()) + 
+  geom_bar(data = subset(kims_plot, age_recode == "a_18_24"), aes(x = usage, y = count, fill = age_recode), stat = "identity") + 
+  geom_bar(data = subset(kims_plot, age_recode != "a_18_24"), aes(x = usage, y = count*(-1), fill = age_recode), stat = "identity") + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+  scale_y_continuous(labels = function(x)abs(x)) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Drug Consumption Categories by age groups")
+
+pyramid_plot
+
+#Defining the animation with the different states
+anim <- pyramid_plot + 
+  transition_states(substance,
+                    transition_length = 2,
+                    state_length = 1000) + 
+  ggtitle('Drug now showing:  {closest_state}',
+          subtitle = 'Frame {frame} of {nframes}')
+
+#Run
+animate(anim, fps = 1)
+```
+
+# Single frames:
+
+```{r}
+ggplot(drug_consumption, aes(x = cannabis)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "a_18_24"), aes(y = stat(count), fill = age_recode)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "b_25_34" | age_recode == "c_35_44" | age_recode == "d_45_54"| age_recode == "e_55_64" | age_recode == "f_65_gt"), aes(y = stat(count)*(-1), fill = age_recode)) + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Cannabis Consumption Categories by age groups")
+```
+
+```{r}
+ggplot(drug_consumption, aes(x = alcohol)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "a_18_24"), aes(y = stat(count), fill = age_recode)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "b_25_34" | age_recode == "c_35_44" | age_recode == "d_45_54"| age_recode == "e_55_64" | age_recode == "f_65_gt"), aes(y = stat(count)*(-1), fill = age_recode)) + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Alcohol Consumption Categories by age groups")
+```
+
+```{r}
+ggplot(drug_consumption, aes(x = ketamine)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "a_18_24"), aes(y = stat(count), fill = age_recode)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "b_25_34" | age_recode == "c_35_44" | age_recode == "d_45_54"| age_recode == "e_55_64" | age_recode == "f_65_gt"), aes(y = stat(count)*(-1), fill = age_recode)) + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Ketamine Consumption Categories by age groups")
+```
+
+```{r}
+ggplot(drug_consumption, aes(x = cocaine)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "a_18_24"), aes(y = stat(count), fill = age_recode)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "b_25_34" | age_recode == "c_35_44" | age_recode == "d_45_54"| age_recode == "e_55_64" | age_recode == "f_65_gt"), aes(y = stat(count)*(-1), fill = age_recode)) + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+  scale_y_continuous(labels = function(x)abs(x)) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Cocaine Consumption Categories by age groups")
+
+```
+
