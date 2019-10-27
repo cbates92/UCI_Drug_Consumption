@@ -6,8 +6,7 @@ load_package(c("readr",
                "readxl",
                "dplyr",
                "ggforce",
-               "stringr",
-               "prcomp"))
+               "stringr"))
 
 # we load our dataset
 drug_consumption <- read_csv("drug_consumption.data",

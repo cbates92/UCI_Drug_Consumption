@@ -1,56 +1,207 @@
 ---
-title: "EDA"
+title: "STAT5003 - Deliverable Two: EDA"
+author: "Group 14"
+date: "27 October 2019"
 output: html_document
 ---
 
-```{r}
+# Introduction
+
+```{r, echo=F, message = F, warning = F}
 # Load data preparation script which loads data with some transformations
 source("SC001_Data_Preparation.R")
+
+load_package(c('gganimate', 'ggpubr', "gifski", "png"))
+
 ```
 
-```{r}
+The dataset chosen by **Group 14** for the purposes of this analysis is the _Drug Consumption_ dataset sourced from the University of California, Irvine’s Machine Learning Repository. 
+
+The _Drug Consumption_ dataset can be accessed here: https://archive.ics.uci.edu/ml/datasets/Drug+consumption+%28quantified%29
+
+The _Drug Consumption_ dataset includes observations collected in an online survery from 1,885 respondents with 31 attributes collected for each respondent.
+
+These __31__ attributes include:
+
+* **5** demongraphic attributes
+  * age
+  * gender
+  * highest level of education attained
+  * country of residence
+  * ethnicity
+* **7** personality measurements
+  * neuroticism
+  * extraversion
+  * openness to experience
+  * agreeableness
+  * conscientiousness
+  * impulsiveness
+  * sensation seeking
+* the timing of the most recent consumption of **19** substances
+  * alcohol
+  * amphetamines
+  * amyl nitrite
+  * benzodiazepine
+  * cannabis
+  * chocolate
+  * cocaine
+  * caffeine
+  * crack
+  * ecstasy
+  * heroin
+  * ketamine
+  * legal highs
+  * LSD
+  * methadone
+  * mushrooms
+  * nicotine
+  * volatile substance abuse 
+  * semeron
+
+NB: Semeron isn't a real substance, but was included in the online survey in an attempt to identify any respondents making false claims regarding their substance usage.
+
+In the _Drug Consumption_ dataset responses relating to the consumption of each substance are captured by seven distinct classes: _‘Never Used’_, _‘Used over a Decade Ago’_, _‘Used in Last Decade’_, _‘Used in Last Year’_, _‘Used in Last Month’_, _‘Used in Last Week’_, and _‘Used in Last Day’_. These classes are represented in the data with labels CL0, CL1, CL2, CL3, CL4, CL5 and CL6 respectively as below:
+
+```{r, echo=F}
+
+head(drug_consumption[, .(ID = id, Alcohol = alcohol, Cannabis = cannabis)])
+
+```
+
+As outlined in **Group 14**'s submission for Deliverable One, the eventual intention of this analysis is to construct a classification model relating to the consumption of illicit substances, specifically considering opiods given the increase in opiod related deaths in recent decades. 
+
+## Demographic Attributes
+
+<br/>
+
+The figure below is a simple bar plot of the age (note that sourced dataset only provides binned ages) of our survey respondents. This figure demonstrates that our dataset is heavily biased towards a younger demographic and this likely undermines our confidence that any findings from this analysis will be more widely generalisable.  
+
+<br/>
+
+```{r, echo=F}
+
+ggplot(drug_consumption[, .N, by = age_recode][order(age_recode)], aes(x = age_recode, y = N, fill = age_recode, colour = I("black"))) + 
+  geom_bar(stat = "identity") +
+  xlab("Reported Age of Respondent (Years)") +
+  ylab("Count of Respondents") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+
+```
+
+<br/> The figure below is a simple bar plot of the reported ethnicity of our survey respondents. This figure demonstrates that our dataset is heavily biased towards white respondents and this likely undermines our confidence that any findings from this analysis will be more widely generalisable.
+
+<br/>
+
+```{r, echo=F}
+
+ggplot(drug_consumption[, .N, by = ethnicity_recode][order(ethnicity_recode)], aes(x = ethnicity_recode, y = N, fill = ethnicity_recode, colour = I("black"))) + 
+  geom_bar(stat = "identity") +
+  xlab("Reported Ethnicity of Respondent") +
+  ylab("Count of Respondents") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+
+```
+<br/> 
+
+The figure below is a simple bar plot of the reported highest level of education of of our survey respondents. It's noted that generally our respondents are highly educated with only 14% of respondents not participating in some form of tertiary education.
+
+<br/> 
+
+```{r, echo=F}
+
+ggplot(drug_consumption[, .N, by = education_recode][order(education_recode)], aes(x = education_recode, y = N, fill = education_recode, colour = I("black"))) + 
+  geom_bar(stat = "identity") +
+  xlab("Reported Education of Respondent") +
+  ylab("Count of Respondents") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+
+```
+
+<br/> 
+
+The figure below is a simple bar plot of the reported country of residence of our survey respondents. This figure demonstrates that our dataset is heavily biased towards residents of the UK and USA and this likely undermines our confidence that any findings from this analysis will be more widely generalisable.
+
+<br/>
+
+```{r, echo=F}
+
+ggplot(drug_consumption[, .N, by = country_recode][order(country_recode)], aes(x = country_recode, y = N, fill = country_recode, colour = I("black"))) + 
+  geom_bar(stat = "identity") +
+  xlab("Reported Country of Respondent") +
+  ylab("Count of Respondents") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+
+```
+
+<br/> 
+
+The figure below demonstrates that within the age groups there is a large variation in education level. In younger age groups, the respondents are less educated (unsuprising given they've had a less time for their education - infact the most popular categorisation for the 18-24 age group is *some university, but no degree*, suggesting many in this age group are currently studying at university) while in older age groups, respondents have more frequently achieved higher levels of education. Also noticiable is that older age groups appear to have a bi-modal distribution, with the *left school at 16 years old* category standing out.
+
+The interaction between our age and education variables will need to be considered further when building and evaulating classifcation models for Deliverable Three.
+
+<br/> 
+
+```{r, echo = F, fig.width=12, fig.height=8}
 # Plot histograms of age groups vs. education level
-ggplot(drug_consumption[, .N, by = .(age_recode, education_recode)], aes(x = education_recode, y = N)) +
-  geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggplot(drug_consumption[, .N, by = .(age_recode, education_recode)], aes(x = education_recode, y = N, fill = age_recode, colour = I("black"))) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  facet_wrap("age_recode", scales = "free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
 ```
-<br/> These plots show us that within the age groups there is a large variation in education level. In lower age groups, the respondents are less educated while in higher age groups, respondents are typically have achieve higher education. The breakdown in education levels is also quite unbalanced.
 
+Overall percentage of male respondents is `r sum(drug_consumption$gender_recode == "male") / 1885`
 
-```{r}
+```{r, echo=F}
 # Show the proportion of male respondents
-sum(drug_consumption$gender_recode == "male") / 1885 # ~50% male vs. female in total
+ # ~50% male vs. female in total
 
 # Plot histograms of age group vs.gender
-ggplot(drug_consumption[, .N, by = .(age_recode, gender_recode)], aes(x = gender_recode, y = N)) +
+ggplot(drug_consumption[, .N, by = .(age_recode, gender_recode)], aes(x = gender_recode, y = N, colour  = I("black"), fill = age_recode)) +
   geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-<br/>  While the total number of male and female respondents is 50%, the number of males and females can be quite disporportionate within age groups. In the 18-24 age group, the number of males greatly outpaces the number of females while females greatly outnumber males in the 25-34 and 35-44 age groups.
 
+<br/>  
 
-```{r}
+While the total number of male and female respondents is 50%, the number of males and females can be quite disporportionate within age groups. In the 18-24 age group, the number of males greatly outpaces the number of females while females greatly outnumber males in the 25-34 and 35-44 age groups.
+
+<br/>
+
+```{r, echo=F}
 # Plot histograms of age group vs. country
-ggplot(drug_consumption[, .N, by = .(age_recode, country_recode)], aes(x = country_recode, y = N)) +
+ggplot(drug_consumption[, .N, by = .(age_recode, country_recode)], aes(x = country_recode, y = N, colour = I("black"), fill = age_recode)) +
   geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-<br/> This histogram shows the breakdown of the respondent's country by age group. Not all countries are represented in each age group. Ireland, for example, does not have any representation in the 55-64 or 65+ age groups. There is also a heavy tilt toward respondents from USA in the 18-24 age group while all other age groups and the total % of respondents are dominated by respondents from the UK.
+<br/> 
 
+This histogram shows the breakdown of the respondent's country by age group. Not all countries are represented in each age group. Ireland, for example, does not have any representation in the 55-64 or 65+ age groups. There is also a heavy tilt toward respondents from USA in the 18-24 age group while all other age groups and the total % of respondents are dominated by respondents from the UK.
 
-```{r}
+<br/> 
+
+The below figure seeks to explore the interactions between the personality measurements. At the diagonal intersection of each personality measurement a simple density plot by gender is produced. At the intersection of personality measurements below the diagonal a scatter plot with a loess smoothing function applied is charted. At the intersection of personality measurements above the diagonal a pearson measurement of correlation is included. 
+
+<br/> 
+
+```{r, echo=F, fig.height = 16, fig.width=16}
+
 ggplot(drug_consumption, aes(x = .panel_x, y = .panel_y, colour = gender_recode, fill = gender_recode)) + 
   geom_jitter(alpha = 0.4, size = 1) +
   geom_autodensity(alpha = 0.4, position = "identity") +
+  stat_cor(method = "pearson", aes(colour = NULL, fill = NULL)) +
   geom_smooth(aes(colour = NULL, fill = NULL), formula = y ~ x, method = "loess") + 
   facet_matrix(vars(c("agreeableness_recode", "conscientiousness_recode",
                       "extraversion_recode", "neuroticism_recode",
                       "openess_recode", "impulsiveness_recode",
                       "sensation_recode")),
-               layer.diag = 2, grid.y.diag = FALSE)
+               layer.diag = 2,
+               layer.upper = 3,
+               grid.y.diag = FALSE)
 ```
 
-<br/> Firstly, looking distributions of female and male gender, we can see that the distribution of the agreeableness feature is skewed towards the higher end for the female respondents.
+<br/> 
+
+Firstly, looking distributions of female and male gender, we can see that the distribution of the agreeableness feature is skewed towards the higher end for the female respondents.
 
 Adversely, traits such as impulsiveness and sensation are skewed more toward to higher end of the scale in male respondents.
 
@@ -60,59 +211,45 @@ Another obvious pattern we see is that neuroticism has a strong negative correla
 
 Impulsiveness and sensation, on the other hand, have a strong positive correlation, which makes perfect common sense.
 
-```{r}
-# do some kmeans/hierarchial clustering analysis to find out what drugs show a usage pattern similar to heroin. Group these drugs together as our predicted case.
+## Relationships between Substances
 
-usage_variables_numeric_only = as.matrix(drug_consumption[, c(usage_variables_numeric), with = F])
+We've attempted to cluster our substances together based upon their usage patterns in the *Drug Consumption* dataset. This clustering has been performed using k-means, and selected results are presented below.
 
-usage_variables_numeric_only = t(usage_variables_numeric_only)
+```{r, echo=F}
 
-within_sum_of_squares = c()
-between_sum_of_squares = c()
-total_sum_of_squares = c()
+source('SC003_Clustering_Analysis.R')
 
-results = list()
+ggplot(results_ss, aes(x = k, y = within_difference)) + 
+  geom_line() +
+  geom_point() +
+  ylab("Marginal reduction in within sum of squares") +
+  scale_x_continuous(breaks = 2:10, minor_breaks = 2:10) +
+  transition_reveal(along = k)
 
-for (my_repeat in 1:10){
-  
-  test_vector = 2:17
-  
-  for (k in test_vector) {
-    
-    kmeans_output = kmeans(usage_variables_numeric_only, 
-                           centers = k)
-    
-    within_sum_of_squares = c(within_sum_of_squares, kmeans_output$tot.withinss)
-    between_sum_of_squares = c(between_sum_of_squares, kmeans_output$betweenss)
-    total_sum_of_squares = c(total_sum_of_squares, kmeans_output$totss)
-    
-  }
-  
-  results[[my_repeat]] = data.table(my_repeat = my_repeat, 
-                                    k = test_vector, 
-                                    within = within_sum_of_squares, 
-                                    between = between_sum_of_squares)
-  
-}
-
-results = rbindlist(results)
-
-results = results[, j = .(within = mean(within),
-                          between = mean(between)), 
-                  by = .(k)]
-
-# I think this suggests we go for 8 clusters
-plot(diff(-results$within))
-plot(-results$within)
-
-clustering = kmeans(usage_variables_numeric_only, centers = 5)
-
-sort(clustering$cluster)
 ```
 
+The below chart demonstrates the evolution of our clustering as we increase k in our kmeans clustering. Cluster membership is identified by orientation along the x-axis as well as the colour of our substances. It's observable that some substances remain together for all (or most) values of k, suggesting the similarity in their usage patterns across respondents is quite strong. Examples include the group chocolate, caffeine and alcohol (unsurprising given all three are legal and generally considered socially acceptable), the group cannabis and nicotine (unsurprising given the most common form of ingestion for both substances is smoking).
 
+```{r, echo=FALSE}
 
-```{r}
+ggplot(cluster_dt_melt[max_cluster < 10], aes(x = factor(cluster), y = dummy, label = drug, colour = factor(cluster))) + 
+  theme(legend.position = "none", axis.text.y=element_blank()) +
+  xlab("Cluster") +
+  ylab("") +
+  geom_text() +
+  transition_states(states = k,
+                    transition_length = 1,
+                    state_length = 1)
+
+```
+
+<br/> 
+
+Interestingly, this plot shows us that there is a strong link between cannabis usage and nicotine usage, as seen by the strong color intensity in the bottom left and top right corners. Those who have smoked either cannabis or nicotine recently (class 6) are very likely to have smoked the other drug recently. Those who have not smoked one drug (class 0) are unlikely to have smoked the other drug.
+
+<br/>
+
+```{r, echo=F}
 library("lattice")
 # Create heatmap of plots for cannabis vs. nicotine
 # Inspiration for this heatmap comes from the findings of the clustering analysis. These drugs belong to the same class and appear to be similar in that they both involve smoking
@@ -126,4 +263,97 @@ levelplot(heat_can_nic, xlab="Cannabis", ylab="Nicotine", main="Cannabis vs. Nic
 
 ```
 
-<br/> Interestingly, this plot shows us that there is a strong link between cannabis usage and nicotine usage, as seen by the strong color intensity in the bottom left and top right corners. Those who have smoked either cannabis or nicotine recently (class 6) are very likely to have smoked the other drug recently. Those who have not smoked one drug (class 0) are unlikely to have smoked the other drug.
+```{r Animated_graph, fig.height = 8, fig.width = 8, echo = F}
+options(gganimate.nframes = 38)
+
+#Creating a Dataframe with the values we need for the animated pyramid plot
+kims_plot = list()
+for (substance in usage_variables) {
+ output = drug_consumption[, j = .(count = .N), by = c("age_recode", substance)]
+ setnames(output, substance, "usage")
+ output[, substance := substance]
+ kims_plot[[length(kims_plot) + 1]] = output
+}
+kims_plot = rbindlist(kims_plot)
+
+
+#Defining the pyramid plot function
+pyramid_plot <- ggplot(kims_plot, aes()) + 
+  geom_bar(data = subset(kims_plot, age_recode == "a_18_24"), aes(x = usage, y = count, fill = age_recode), stat = "identity") + 
+  geom_bar(data = subset(kims_plot, age_recode != "a_18_24"), aes(x = usage, y = count*(-1), fill = age_recode), stat = "identity") + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+  scale_y_continuous(labels = function(x)abs(x)) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Drug Consumption Categories by age groups")
+
+# pyramid_plot
+
+#Defining the animation with the different states
+anim <- pyramid_plot + 
+  transition_states(substance,
+                    transition_length = 2,
+                    state_length = 1000) + 
+  ggtitle('Drug now showing:  {closest_state}',
+          subtitle = 'Frame {frame} of {nframes}')
+
+#Run
+animate(anim, fps = 1)
+```
+
+<br/> 
+
+This animated stacked pyramid graph shows all responses about drug consumption, iterating through all different drugs contained in the dataset. The bars are split by age of the respondant, with the 18 to 24 year olds (dominant group) displayed on the right side and the older age groups displayed on the left side. This animation shows interesting differences in the overall composition of the answers but also how different age groups contribute to certain answers: We can see that for example mushrooms have almost evenly spread answers and the usage is also balanced across age groups. For most illegal drugs mostly the three youngest age groups contribute to the more recent usage. Also, as expected, the young age group between 18 to 24 rarley respond *"Used over a decade ago"*, which is assumibly due to their age.
+
+<br/> 
+
+### Selected Single frames:
+
+```{r, echo=F}
+ggplot(drug_consumption, aes(x = cannabis)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "a_18_24"), aes(y = stat(count), fill = age_recode)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "b_25_34" | age_recode == "c_35_44" | age_recode == "d_45_54"| age_recode == "e_55_64" | age_recode == "f_65_gt"), aes(y = stat(count)*(-1), fill = age_recode)) + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+    scale_y_continuous(labels = function(x)abs(x)) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Cannabis Consumption Categories by age groups")
+```
+
+<br/> 
+
+This stacked pyramid bar chart shows how the respondants from all age groups differ by drug consumption category. Looing at cannabis consumption in this case, it because very visile, that young respondants aged 18 to 24 make up the biggest portion of people who responded that they used cannabis in the last day (CL6). We can furthermore see, that the most popular answer to the survey question regarding cannbis consumption is *"Used in last day"* (CL6), followed by *"Never Used"* (CL0). Thus, most respondants are at either extreme: Having never used or recently used cannabis. Since the protortion of 18 to 24 year old respondants is the largest, these are displayed on the right part of the graph, whereas the other five agegroups are represented on the left by stacked bars. The next larger age group between 35 and 34 has the three largest group of respondants among *"Used Last Decade"*, *"Never used"* and *"Used in last day"*. These findings also support what has been outlined based on a US study by *FiveThirtyEight*: https://fivethirtyeight.com/features/how-baby-boomers-get-high/. Regular cannabis consumption is poular among the youth.
+
+<br/>
+
+```{r, echo=F}
+ggplot(drug_consumption, aes(x = alcohol)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "a_18_24"), aes(y = stat(count), fill = age_recode)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "b_25_34" | age_recode == "c_35_44" | age_recode == "d_45_54"| age_recode == "e_55_64" | age_recode == "f_65_gt"), aes(y = stat(count)*(-1), fill = age_recode)) + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Alcohol Consumption Categories by age groups")
+```
+
+```{r, echo=F}
+ggplot(drug_consumption, aes(x = ketamine)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "a_18_24"), aes(y = stat(count), fill = age_recode)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "b_25_34" | age_recode == "c_35_44" | age_recode == "d_45_54"| age_recode == "e_55_64" | age_recode == "f_65_gt"), aes(y = stat(count)*(-1), fill = age_recode)) + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Ketamine Consumption Categories by age groups")
+```
+
+```{r, echo=F}
+ggplot(drug_consumption, aes(x = cocaine)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "a_18_24"), aes(y = stat(count), fill = age_recode)) + 
+  geom_bar(data = subset(drug_consumption, age_recode == "b_25_34" | age_recode == "c_35_44" | age_recode == "d_45_54"| age_recode == "e_55_64" | age_recode == "f_65_gt"), aes(y = stat(count)*(-1), fill = age_recode)) + 
+    coord_flip() + 
+  geom_hline(yintercept = 0, colour = "white", lwd = 1) +
+  scale_y_continuous(labels = function(x)abs(x)) +
+  labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
+  ggtitle("Cocaine Consumption Categories by age groups")
+
+```
