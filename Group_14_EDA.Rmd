@@ -19,7 +19,7 @@ ggplot(drug_consumption[, .N, by = .(age_recode, education_recode)], aes(x = edu
 
 ```{r}
 # Show the proportion of male respondents
-sum(drug_consumption$gender_recode == "male") / 1885
+sum(drug_consumption$gender_recode == "male") / 1885 # ~50% male vs. female in total
 
 # Plot histograms of age group vs.gender
 ggplot(drug_consumption[, .N, by = .(age_recode, gender_recode)], aes(x = gender_recode, y = N)) +
@@ -50,7 +50,72 @@ ggplot(drug_consumption, aes(x = .panel_x, y = .panel_y, colour = gender_recode,
                layer.diag = 2, grid.y.diag = FALSE)
 ```
 
+```{r}
+# do some kmeans/hierarchial clustering analysis to find out what drugs show a usage pattern similar to heroin. Group these drugs together as our predicted case.
 
+usage_variables_numeric_only = as.matrix(drug_consumption[, c(usage_variables_numeric), with = F])
+
+usage_variables_numeric_only = t(usage_variables_numeric_only)
+
+within_sum_of_squares = c()
+between_sum_of_squares = c()
+total_sum_of_squares = c()
+
+results = list()
+
+for (my_repeat in 1:10){
+  
+  test_vector = 2:17
+  
+  for (k in test_vector) {
+    
+    kmeans_output = kmeans(usage_variables_numeric_only, 
+                           centers = k)
+    
+    within_sum_of_squares = c(within_sum_of_squares, kmeans_output$tot.withinss)
+    between_sum_of_squares = c(between_sum_of_squares, kmeans_output$betweenss)
+    total_sum_of_squares = c(total_sum_of_squares, kmeans_output$totss)
+    
+  }
+  
+  results[[my_repeat]] = data.table(my_repeat = my_repeat, 
+                                    k = test_vector, 
+                                    within = within_sum_of_squares, 
+                                    between = between_sum_of_squares)
+  
+}
+
+results = rbindlist(results)
+
+results = results[, j = .(within = mean(within),
+                          between = mean(between)), 
+                  by = .(k)]
+
+# I think this suggests we go for 8 clusters
+plot(diff(-results$within))
+plot(-results$within)
+
+clustering = kmeans(usage_variables_numeric_only, centers = 5)
+
+sort(clustering$cluster)
+```
+
+
+
+```{r}
+library("lattice")
+# Create heatmap of plots for cannabis vs. nicotine
+# Inspiration for this heatmap comes from the findings of the clustering analysis. These drugs belong to the same class and appear to be similar in that they both involve smoking
+
+cannabis_nictoine <- dcast(drug_consumption, cannabis_numeric ~ nicotine_numeric, fun.aggregate = length, value.var = "id")
+
+heat_can_nic <- as.matrix(cannabis_nictoine[,-1])
+colnames(heat_can_nic) <- c("0", "1", "2", "3", "4", "5", "6")
+rownames(heat_can_nic) <- c("0", "1", "2", "3", "4", "5", "6")
+levelplot(heat_can_nic, xlab="Cannabis", ylab="Nicotine", main="Cannabis vs. Nicotine Usage")
+
+```
+# Interestingly, this plot shows us that there is a strong link between cannabis usage and nictone usage, as seen by the strong color intensity in the bottom left and top right corners. Those who have smoked either cannabis or nicotine recently (class 6) are very likely to have smoked the other drug recently. Those who have not smoked one drug (class 0) are unlikely to have smoked the other drug recently.
 
 
 
