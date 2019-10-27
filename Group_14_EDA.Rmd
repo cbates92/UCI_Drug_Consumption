@@ -1,0 +1,57 @@
+---
+title: "EDA"
+output: html_document
+---
+
+```{r}
+# Load data preparation script which loads data with some transformations
+source("SC001_Data_Preparation.R")
+```
+
+```{r}
+# Plot histograms of age groups vs. education level
+ggplot(drug_consumption[, .N, by = .(age_recode, education_recode)], aes(x = education_recode, y = N)) +
+  geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+# These plots show us that within the age groups there is a large variation in education level. In lower age groups, the respondents are less educated while in higher age groups, respondents are typically have achieve higher education.
+
+
+```{r}
+# Show the proportion of male respondents
+sum(drug_consumption$gender_recode == "male") / 1885
+
+# Plot histograms of age group vs.gender
+ggplot(drug_consumption[, .N, by = .(age_recode, gender_recode)], aes(x = gender_recode, y = N)) +
+  geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+# While the total number of male and female respondents is 50%, the number of males and females can be quite disporportionate within age groups. In the 18-24 age group, the number of males greatly outpaces the number of females while females greatly outnumber males in the 25-34 and 35-44 age groups.
+
+
+```{r}
+# Plot histograms of age group vs. country
+ggplot(drug_consumption[, .N, by = .(age_recode, country_recode)], aes(x = country_recode, y = N)) +
+  geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+
+```{r}
+ggplot(drug_consumption, aes(x = .panel_x, y = .panel_y, colour = gender_recode, fill = gender_recode)) + 
+  geom_jitter(alpha = 0.4, size = 1) +
+  geom_autodensity(alpha = 0.4, position = "identity") +
+  geom_smooth(aes(colour = NULL, fill = NULL), formula = y ~ x, method = "loess") + 
+  facet_matrix(vars(c("agreeableness_recode", "conscientiousness_recode",
+                      "extraversion_recode", "neuroticism_recode",
+                      "openess_recode", "impulsiveness_recode",
+                      "sensation_recode")),
+               layer.diag = 2, grid.y.diag = FALSE)
+```
+
+
+
+
+
+
