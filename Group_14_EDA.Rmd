@@ -14,7 +14,7 @@ ggplot(drug_consumption[, .N, by = .(age_recode, education_recode)], aes(x = edu
   geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-# These plots show us that within the age groups there is a large variation in education level. In lower age groups, the respondents are less educated while in higher age groups, respondents are typically have achieve higher education.
+# These plots show us that within the age groups there is a large variation in education level. In lower age groups, the respondents are less educated while in higher age groups, respondents are typically have achieve higher education. The breakdown in education levels is also quite unbalanced.
 
 
 ```{r}
@@ -35,7 +35,7 @@ ggplot(drug_consumption[, .N, by = .(age_recode, country_recode)], aes(x = count
   geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-
+# This histogram shows the breakdown of the respondent's country by age group. Not all countries are represented in each age group. Ireland, for example, does not have any representation in the 55-64 or 65+ age groups. There is also a heavy tilt toward respondents from USA in the 18-24 age group while all other age groups and the total % of respondents are dominated by respondents from the UK.
 
 
 ```{r}
@@ -49,6 +49,7 @@ ggplot(drug_consumption, aes(x = .panel_x, y = .panel_y, colour = gender_recode,
                       "sensation_recode")),
                layer.diag = 2, grid.y.diag = FALSE)
 ```
+
 
 ```{r}
 # do some kmeans/hierarchial clustering analysis to find out what drugs show a usage pattern similar to heroin. Group these drugs together as our predicted case.
@@ -115,7 +116,7 @@ rownames(heat_can_nic) <- c("0", "1", "2", "3", "4", "5", "6")
 levelplot(heat_can_nic, xlab="Cannabis", ylab="Nicotine", main="Cannabis vs. Nicotine Usage")
 
 ```
-# Interestingly, this plot shows us that there is a strong link between cannabis usage and nictone usage, as seen by the strong color intensity in the bottom left and top right corners. Those who have smoked either cannabis or nicotine recently (class 6) are very likely to have smoked the other drug recently. Those who have not smoked one drug (class 0) are unlikely to have smoked the other drug recently.
+# Interestingly, this plot shows us that there is a strong link between cannabis usage and nicotine usage, as seen by the strong color intensity in the bottom left and top right corners. Those who have smoked either cannabis or nicotine recently (class 6) are very likely to have smoked the other drug recently. Those who have not smoked one drug (class 0) are unlikely to have smoked the other drug. 
 
 
 
