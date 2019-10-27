@@ -1,5 +1,5 @@
 source("SC001_Data_Preparation.R")
-
+library(prcomp)
 #==================================================================================================================================================================
 # TODO:
 
@@ -109,4 +109,9 @@ plot(-results$within)
 
 clustering = kmeans(usage_variables_numeric_only, centers = 5)
 
+pca <- prcomp(drug_consumption[,c(usage_variables_numeric),with=FALSE],scale = TRUE)
+min_comp <- min(which(cumsum(pca$sdev^2/sum(pca$sdev^2))>0.9))
+
+clustering_pca <- kmeans(pca$rotation[,1:min_comp])
+drug_consumption$pca_cluster <- clustering
 sort(clustering$cluster)
