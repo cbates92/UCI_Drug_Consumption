@@ -50,6 +50,15 @@ ggplot(drug_consumption, aes(x = .panel_x, y = .panel_y, colour = gender_recode,
                layer.diag = 2, grid.y.diag = FALSE)
 ```
 
+# Firstly, looking distributions of female and male gender, we can see that the distribution of the agreeableness feature is skewed towards the higher end for the female respondents.
+
+# Adversely, traits such as impulsiveness and sensation are skewed more toward to higher end of the scale in male respondents.
+
+# When we look into the relationship between characteristics, extraversion and conscientiousness have a strong negative correlation. 
+
+# Another obvious pattern we see is that neuroticism has a strong negative correlation with both conscientiousness and extraversion.
+
+# Impulsiveness and sensation, on the other hand, have a strong positive correlation, which makes perfect common sense.
 
 ```{r}
 # do some kmeans/hierarchial clustering analysis to find out what drugs show a usage pattern similar to heroin. Group these drugs together as our predicted case.
