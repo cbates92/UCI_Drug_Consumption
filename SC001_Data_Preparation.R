@@ -5,7 +5,8 @@ load_package(c("readr",
                "data.table",
                "readxl",
                "dplyr",
-               "ggforce"))
+               "ggforce",
+               "stringr"))
 
 # we load our dataset
 drug_consumption <- read_csv("drug_consumption.data",
@@ -74,6 +75,7 @@ usage_variables_rationalised = paste(usage_variables,
 # this structure is more complicated. I'm anticipating wanting to refer to different 'CL' levels for each drug collectively..
 usage_variables_nested_list = list(CL0 = paste0(usage_variables, "_CL0"),
                                    CL1 = paste0(usage_variables, "_CL1"),
+                                   CLX = paste0(usage_variables, "_CLX"),
                                    CL2 = paste0(usage_variables, "_CL2"),
                                    CL3 = paste0(usage_variables, "_CL3"),
                                    CL4 = paste0(usage_variables, "_CL4"),
@@ -163,6 +165,8 @@ for (variable_name in usage_variables){
     }
       
   }
+  
+  drug_summary = drug_summary[, paste0(variable_name, "_CLX") := if_else(get(numeric_usage_name) != 0, 1, 0)][]
   
   # we want to get rid of these before we merge back onto main dataset
   drug_summary[, (numeric_usage_name) := NULL]
