@@ -1,0 +1,133 @@
+---
+title: "EDA"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+# Load data preparation script which loads data with some transformations
+source("SC001_Data_Preparation.R")
+```
+
+```{r}
+library(caret)
+
+index_coke <- createDataPartition(drug_consumption$cocaine_rationalised, p = .60, list = FALSE)
+train_coke <- drug_consumption[index_coke,]
+test_coke <- drug_consumption[-index_coke,]
+```
+
+The multinom function from nnet fits multinomial log-linear models via neural networks. A log-linear model is a model which makes it possible to apply multinomial linear regression.
+
+```{r}
+require(nnet)
+
+# Training the multinomial model for cocaine
+multinom_model.coke <- multinom(cocaine_rationalised ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, data = train_coke)
+
+# Predict the class for test set for cocaine
+test_coke$ClassPredicted <- predict(multinom_model.coke, newdata = test_coke, "class")
+
+# Build classification table for cocaine
+class_tab.coke <- table(test_coke$cocaine_rationalised, test_coke$ClassPredicted)
+```
+
+```{r}
+# Calculate accuracy for coke
+round((sum(diag(class_tab.coke))/sum(class_tab.coke))*100,2)
+
+# Show classification table
+print(class_tab.coke)
+
+
+```
+
+```{r}
+index_ecstacy <- createDataPartition(drug_consumption$ecstacy, p = .60, list = FALSE)
+train_ecstacy <- drug_consumption[index_ecstacy,]
+test_ecstacy <- drug_consumption[-index_ecstacy,]
+
+# Training the multinomial model for ecstacy
+multinom_model.ecstacy <- multinom(ecstacy ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, data = train_ecstacy)
+
+# Predict the class for test set for ecstacy
+test_ecstacy$ClassPredicted <- predict(multinom_model.ecstacy, newdata = test_ecstacy, "class")
+
+# Build classification table for ecstacy
+class_tab.ecstacy <- table(test_ecstacy$ecstacy, test_ecstacy$ClassPredicted)
+```
+
+```{r}
+# Calculate accuracy for ecstacy
+round((sum(diag(class_tab.ecstacy))/sum(class_tab.ecstacy))*100,2)
+
+# Show classification table
+print(class_tab.ecstacy)
+```
+
+```{r}
+index_mushrooms<- createDataPartition(drug_consumption$mushrooms_numeric, p = .60, list = FALSE)
+train_mushrooms <- drug_consumption[index_mushrooms,]
+test_mushrooms <- drug_consumption[-index_mushrooms,]
+
+# Training the multinomial model for mushrooms
+multinom_model.mushrooms <- multinom(mushrooms_numeric ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, data = train_mushrooms)
+
+# Predict the class for test set for mushrooms
+test_mushrooms$ClassPredicted <- predict(multinom_model.mushrooms, newdata = test_mushrooms, "class")
+
+# Build classification table for mushrooms
+class_tab.mushrooms <- table(test_mushrooms$mushrooms_numeric, test_mushrooms$ClassPredicted)
+
+# Calculate accuracy for mushrooms
+round((sum(diag(class_tab.mushrooms))/sum(class_tab.mushrooms))*100,2)
+
+# Show classification table
+print(class_tab.mushrooms)
+```
+
+```{r}
+which( colnames(drug_consumption)=="mushrooms_numeric" )
+```
+
+
+```{r}
+library(caret)
+library(xgboost)
+
+eta = 0.03
+nrounds=500
+
+xgb.model <- xgboost(data = as.matrix(train_mushrooms[, -mushrooms_numeric]), label = train_mushrooms$mushrooms_numeric, nrounds = nrounds, max_depth = 2, eta = eta, verbose=FALSE)  
+xgb.test <- predict(xgb.model, newdata = as.matrix(test_mushrooms[, -mushrooms_numeric]))
+xgb.predict <- as.integer(xgb.test)
+
+# Build classification table for mushrooms
+class_tab.mushrooms2 <- table(test_mushrooms$mushrooms_numeric, xgb.predict)
+
+# Calculate accuracy for mushrooms
+round((sum(diag(class_tab.mushrooms2))/sum(class_tab.mushrooms2))*100,2)
+
+# Show classification table
+print(class_tab.mushrooms2)
+
+```
+
+
+```{r}
+# Implement one vs all approach
+model_alcohol_CL0 <- glm(formula = alcohol_CL0 ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, family=binomial(link="logit"), data = drug_consumption)
+
+model_alcohol_CL1 <- glm(formula = alcohol_CL1 ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, family=binomial(link="logit"), data = drug_consumption)
+
+model_alcohol_CL2 <- glm(formula = alcohol_CL2 ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, family=binomial(link="logit"), data = drug_consumption)
+```
+
+```{r}
+fitted.results_alcohol_CL0 <- predict(model_alcohol_CL0, new_data = drug_consumption)
+fitted.results_alcohol_CL1 <- predict(model_alcohol_CL1, new_data = drug_consumption)
+fitted.results_alcohol_CL2 <- predict(model_alcohol_CL2, new_data = drug_consumption)
+```
+
+
