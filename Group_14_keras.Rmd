@@ -10,33 +10,29 @@ library(keras)
 library(caret)
 library(mltools)
 
-ecstacy_CL <- c("ecstacy_CL0","ecstacy_CL1","ecstacy_CL2","ecstacy_CL3","ecstacy_CL4","ecstacy_CL5","ecstacy_CL6")
+ecstacy_CL <- c("ecstacy")
 
-data <- data.frame(drug_consumption)[c(psych_variables,demographic_variables,ecstacy_CL)]
+data <- data.frame(drug_consumption)[c(psych_variables,demographic_variables,usage_variables_nested_all)]
 
-inTrain <- createDataPartition(data$neuroticism, p = .60, list = FALSE)
-train_x <- data[inTrain, c(psych_variables,demographic_variables)]
-test_x <- data[-inTrain, c(psych_variables,demographic_variables)]
-train_y <- as.factor(data[inTrain, ecstacy_CL])
-test_y <- as.factor(data[-inTrain, ecstacy_CL])
-
-
+inTrain <- createDataPartition(data$"neuroticism", p = .60, list = FALSE)
+x_train <- as.matrix(data[inTrain, c(psych_variables,demographic_variables)])
+x_test <- as.matrix(data[-inTrain, c(psych_variables,demographic_variables)])
+y_train <- as.matrix(data[inTrain, usage_variables_nested_all])
+y_test <- as.matrix(data[-inTrain, usage_variables_nested_all])
 
 ```
 
-```{r}
-test_y
-```
+
 
 ```{r}
 model <- keras_model_sequential() 
 
 model %>% 
-  layer_dense(units = 256, activation = 'relu', input_shape = dim(train_x)[2]) %>% 
+  layer_dense(units = 256, activation = 'relu', input_shape = dim(x_train)[2]) %>% 
   layer_dropout(rate = 0.4) %>% 
   layer_dense(units = 128, activation = 'relu') %>%
   layer_dropout(rate = 0.3) %>%
-  layer_dense(units = dim(train_y)[2], activation = 'softmax')
+  layer_dense(units = dim(y_train)[2], activation = 'softmax')
 
 ```
 
@@ -49,7 +45,7 @@ model %>% compile(
 ```
 
 ```{r}
-dim(train_y)
+dim(y_train)
 ```
 
 ```{r}
@@ -59,8 +55,8 @@ model
 
 ```{r}
 history <- model %>% fit(
-  train_x, train_y, 
-  epochs = 10, batch_size = 1, 
+  x_train, y_train, 
+  epochs = 10, batch_size = 32, 
   validation_split = 0.2
 )
 ```
