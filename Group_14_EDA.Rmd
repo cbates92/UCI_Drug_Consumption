@@ -355,5 +355,17 @@ ggplot(drug_consumption, aes(x = cocaine)) +
   scale_y_continuous(labels = function(x)abs(x)) +
   labs(y = "Count of respondants per Drug Consumption Category", x="Drug Consumption Category") +
   ggtitle("Cocaine Consumption Categories by age groups")
-
 ```
+
+
+```{r}
+library(keras)
+model <- keras_model_sequential() 
+model %>% 
+  layer_dense(units = 256, activation = 'relu', input_shape = c(784)) %>% 
+  layer_dropout(rate = 0.4) %>% 
+  layer_dense(units = 128, activation = 'relu') %>%
+  layer_dropout(rate = 0.3) %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
