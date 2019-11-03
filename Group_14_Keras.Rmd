@@ -28,7 +28,6 @@ test_y <- as.factor(data[-inTrain, ecstacy_CL])
 test_y
 ```
 
-
 ```{r}
 model <- keras_model_sequential() 
 
