@@ -1,0 +1,153 @@
+---
+title: "Evaluation"
+author: '490515558'
+date: "3 11 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(mlbench)
+library(caret)
+library(gridExtra)
+library(grid)
+library(MASS)
+library(e1071)
+```
+
+Split:
+
+```{r}
+inTrain <- createDataPartition(drug_consumption$mushrooms_numeric, p = .8)[[1]]
+drug_consumption_train <- drug_consumption[ inTrain, ]
+drug_consumption_test  <- drug_consumption[-inTrain, ]
+```
+
+Train model and predict:
+
+```{r}
+lda.model <- lda(mushrooms_numeric ~ neuroticism + extraversion + openess + agreeableness + conscientiousness + impulsiveness + sensation + age_recode + gender_recode + education_recode + country_recode + ethnicity_recode + alcohol_numeric + caffeine_numeric + chocolate_numeric + legal_highs_numeric + ecstacy_numeric, data = drug_consumption_train)
+lda.pred <- predict(lda.model, newdata = drug_consumption_test)
+```
+
+```{r}
+y.true <- drug_consumption_test$mushrooms_numeric
+y.pred <- (as.numeric(lda.pred$class) - 1)
+MAE <- (abs(as.numeric(lda.pred$class) - 1 - as.integer(drug_consumption_test$mushrooms_numeric)) / 6)
+
+print(paste("MAE", sum(MAE)/nrow(drug_consumption_test)))
+print(paste("Inverse", (1-(sum(abs(y.true - y.pred)/6)/length(y.true)))))
+
+df = data.frame(y.true, y.pred, MAE)
+head(df)
+
+```
+
+
+```{r }
+#install.packages("dplyr")
+library(dplyr)
+
+df_true_0 <- df %>% filter(df$y.true == 0)
+df_true_1 <- df %>% filter(df$y.true == 1)
+df_true_2 <- df %>% filter(df$y.true == 2)
+df_true_3 <- df %>% filter(df$y.true == 3)
+df_true_4 <- df %>% filter(df$y.true == 4)
+df_true_5 <- df %>% filter(df$y.true == 5)
+df_true_6 <- df %>% filter(df$y.true == 6)
+
+par(mfrow=c(2,4))
+color.gradient <- function(x, colors=c("darkolivegreen","yellow","red"), colsteps=100) {
+  return( colorRampPalette(colors) (colsteps) [ findInterval(x, seq(min(x),max(x), length.out=colsteps)) ] )
+}
+breaks =  c(0,1/6,2/6,3/6,4/6,5/6,1)
+hist(df_true_0$MAE, breaks =  c(0,1/6,2/6,3/6,4/6,5/6,1), xlim = c(0,1), main = "CL0 errors", col = color.gradient(breaks), xlab = NULL)
+hist(df_true_1$MAE, breaks =  c(0,1/6,2/6,3/6,4/6,5/6,1), xlim = c(0,1), main = "CL1 errors", col = color.gradient(breaks), xlab = NULL)
+hist(df_true_2$MAE, breaks =  c(0,1/6,2/6,3/6,4/6,5/6,1), xlim = c(0,1), main = "CL2 errors", col = color.gradient(breaks), xlab = NULL)
+hist(df_true_3$MAE, breaks =  c(0,1/6,2/6,3/6,4/6,5/6,1), xlim = c(0,1), main = "CL3 errors", col = color.gradient(breaks), xlab = NULL)
+hist(df_true_4$MAE, breaks =  c(0,1/6,2/6,3/6,4/6,5/6,1), xlim = c(0,1), main = "CL4 errors", col = color.gradient(breaks), xlab = NULL)
+hist(df_true_5$MAE, breaks =  c(0,1/6,2/6,3/6,4/6,5/6,1), xlim = c(0,1), main = "CL5 errors", col = color.gradient(breaks), xlab = NULL)
+hist(df_true_6$MAE, breaks =  c(0,1/6,2/6,3/6,4/6,5/6,1), xlim = c(0,1), main = "CL6 errors", col = color.gradient(breaks), xlab = NULL)
+#c(-0.14,1.14)
+
+```
+
+
+```{r Evaluate Function}
+
+library(caret)
+
+evaluate <- function(reference, prediction){
+  # pass in the reference values (true values y) and the predicted values (y_pred)
+  # only works for the 7 class problem
+  cm <- confusionMatrix(as.factor(reference), as.factor(prediction))
+  # Accuracy (rounded)
+  accuracy <- round((sum(diag(cm$table))/sum(cm$table)), 3)
+  # Soft-margin Accuracy (rounded)
+  soft = (cm$table[2,1] + cm$table[2,1] + cm$table[3,2] + cm$table[2,3] + cm$table[4,3] + cm$table[3,4] + cm$table[5,4] + cm$table[4,5] + cm$table[6,5] + cm$table[5,6])
+  soft.accuracy <- round((soft + sum(diag(cm$table)))/sum(cm$table), 3)
+  E <- (reference - prediction)
+  # Absolute Errors
+  AE <- (abs(reference - prediction))
+  # Scaled Mean Absolute Error
+  SAE <- (abs(reference - prediction)/6)
+  SMAE <- round(mean(SAE), 3)
+  # Macro Scales Mean Absolute Error
+  df = data.frame(reference, prediction, SAE)
+  SAE.by_class <- aggregate(df[, "SAE"], list(df$reference), mean)
+  MSMAE <- round((sum(SAE.by_class$x) / nrow(SAE.by_class)), 3)
+  print(paste("The Accuracy if", accuracy))
+  print(paste("The Soft-margin Accuracy is", soft.accuracy))
+  print(paste("The Scaled Mean Absolute Error is", SMAE))
+  print(paste("The Macro-averaged Scaled Mean Absolute Error is", MSMAE))
+  list(acc = accuracy, soft.acc = soft.accuracy, e = E, ae = AE, sae = SAE, smae = SMAE, msmae = MSMAE)
+}
+```
+
+```{r AddScores Function}
+add.scores <- function(edf, clf_name, scores){
+  # pass in the evaluation dataframe and the scores metric that was returned by the evaluation function
+  newdf <- data.frame("Classifier" = clf_name, "Accuracy" = scores$acc, "Soft-margin Accuracy" = scores$soft.acc, "Scaled MAE" = scores$smae, "Macro-averages Scaled MAE" = scores$msmae)
+  edf <- rbind(edf, newdf)
+  return(edf)
+}
+```
+
+```{r Initialize the evaluation dataframe}
+# Initialize once
+eval.df <- data.frame(matrix(ncol = 5, nrow = 0))
+names(eval.df) <- c("Classifier", "Accuracy", "Soft-margin Accuracy", "Scaled MAE", "Macro Scaled MAE")
+```
+
+
+```{r}
+#calling the functions
+lda.scores <- evaluate(y.true, y.pred)
+
+clf_name <- "LDA"
+
+eval.df <- add.scores(eval.df, clf_name, lda.scores)
+
+```
+```{r}
+print(eval.df)
+```
+```{r}
+# Does the classifier have a tendency to overestimate or underestimate drug consumption?
+# In this case: Slight tendency to overestimate 
+breaks = -6.5:6.5
+color.gradient2 <- function(x, colors=c("hotpink","snow","lightslateblue"), colsteps = 40) {
+  return( colorRampPalette(colors) (colsteps) [ findInterval(x, seq(min(x),max(x), length.out=colsteps)) ] )
+}
+hist(lda.scores$e, xlim = c(-6.5,6.5), breaks = -6.5:6.5, main = "Errors: ( Prediction - True )", xlab = NULL, col = color.gradient2(breaks))
+       #"darkolivegreen")
+```
+```{r}
+cm <- confusionMatrix(as.factor(y.true), as.factor(y.pred))
+#cm
+??concfusionMatrix
+
+ micro_prf = (diag(s) / apply(s,1, sum))[1];
+```
+
