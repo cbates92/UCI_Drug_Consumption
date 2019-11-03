@@ -5,7 +5,12 @@ date: "03/11/2019"
 output: html_document
 ---
 
+
+
 ```{r}
+source("SC000_Initialisation.R")
+source("SC001_Data_Preparation.R")
+
 library(keras)
 library(caret)
 library(mltools)
@@ -14,7 +19,7 @@ ecstacy_CL <- c("ecstacy")
 
 data <- data.frame(drug_consumption)[c(psych_variables,demographic_variables,usage_variables_nested_all)]
 
-inTrain <- createDataPartition(data$"neuroticism", p = .60, list = FALSE)
+inTrain <- createDataPartition(data$"neuroticism", p = .80, list = FALSE)
 x_train <- as.matrix(data[inTrain, c(psych_variables,demographic_variables)])
 x_test <- as.matrix(data[-inTrain, c(psych_variables,demographic_variables)])
 y_train <- as.matrix(data[inTrain, usage_variables_nested_all])
@@ -28,40 +33,35 @@ y_test <- as.matrix(data[-inTrain, usage_variables_nested_all])
 model <- keras_model_sequential() 
 
 model %>% 
-  layer_dense(units = 1024, activation = 'relu', input_shape = dim(x_train)[2]) %>% 
-  layer_dropout(rate = 0.4) %>% 
-  layer_dense(units = 512, activation = 'relu') %>% 
-  layer_dropout(rate = 0.4) %>% 
-  layer_dense(units = 256, activation = 'relu') %>% 
-  layer_dropout(rate = 0.4) %>% 
-  layer_dense(units = 128, activation = 'relu') %>%
+  layer_dense(units = 256, activation = 'relu', input_shape = dim(x_train)[2]) %>% 
+  layer_dropout(rate = 0.2) %>% 
+  layer_dense(units = 128, activation = 'relu') %>% 
+  layer_dropout(rate = 0.2) %>% 
+  layer_dense(units = 32, activation = 'relu') %>% 
+  layer_dropout(rate = 0.2) %>% 
+  layer_dense(units = 16, activation = 'relu') %>%
   
-  layer_dropout(rate = 0.3) %>%
+  layer_dropout(rate = 0.2) %>%
   layer_dense(units = dim(y_train)[2], activation = 'softmax')
 
 ```
 
 ```{r}
 model %>% compile(
-  loss = 'categorical_crossentropy',
+  loss = 'binary_crossentropy',
   optimizer = optimizer_rmsprop(),
   metrics = c('accuracy')
 )
 ```
 
 ```{r}
-dim(y_train)
-```
-
-```{r}
 model
 ```
-
 
 ```{r}
 history <- model %>% fit(
   x_train, y_train, 
-  epochs = 10, batch_size = 32, 
+  epochs = 100, batch_size = 32, 
   validation_split = 0.2
 )
 ```
