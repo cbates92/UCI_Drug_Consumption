@@ -28,9 +28,14 @@ y_test <- as.matrix(data[-inTrain, usage_variables_nested_all])
 model <- keras_model_sequential() 
 
 model %>% 
-  layer_dense(units = 256, activation = 'relu', input_shape = dim(x_train)[2]) %>% 
+  layer_dense(units = 1024, activation = 'relu', input_shape = dim(x_train)[2]) %>% 
+  layer_dropout(rate = 0.4) %>% 
+  layer_dense(units = 512, activation = 'relu') %>% 
+  layer_dropout(rate = 0.4) %>% 
+  layer_dense(units = 256, activation = 'relu') %>% 
   layer_dropout(rate = 0.4) %>% 
   layer_dense(units = 128, activation = 'relu') %>%
+  
   layer_dropout(rate = 0.3) %>%
   layer_dense(units = dim(y_train)[2], activation = 'softmax')
 
