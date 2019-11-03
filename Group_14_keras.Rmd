@@ -1,226 +1,73 @@
 ---
-title: "EDA"
-output:
-  html_document: default
-  pdf_document: default
+title: "Group_14 KEras"
+author: "DenizN"
+date: "03/11/2019"
+output: html_document
 ---
 
 ```{r}
-# Load data preparation script which loads data with some transformations
-source("SC001_Data_Preparation.R")
-```
-
-```{r}
-# Plot histograms of age groups vs. education level
-ggplot(drug_consumption[, .N, by = .(age_recode, education_recode)], aes(x = education_recode, y = N)) +
-  geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-<br/> These plots show us that within the age groups there is a large variation in education level. In lower age groups, the respondents are less educated while in higher age groups, respondents are typically have achieve higher education. The breakdown in education levels is also quite unbalanced.
-
-
-```{r}
-# Show the proportion of male respondents
-sum(drug_consumption$gender_recode == "male") / 1885 # ~50% male vs. female in total
-
-# Plot histograms of age group vs.gender
-ggplot(drug_consumption[, .N, by = .(age_recode, gender_recode)], aes(x = gender_recode, y = N)) +
-  geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-<br/>  While the total number of male and female respondents is 50%, the number of males and females can be quite disporportionate within age groups. In the 18-24 age group, the number of males greatly outpaces the number of females while females greatly outnumber males in the 25-34 and 35-44 age groups.
-
-
-```{r}
-# Plot histograms of age group vs. country
-ggplot(drug_consumption[, .N, by = .(age_recode, country_recode)], aes(x = country_recode, y = N)) +
-  geom_bar(stat = "identity", position = "dodge") + facet_wrap("age_recode", scales = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-<br/> This histogram shows the breakdown of the respondent's country by age group. Not all countries are represented in each age group. Ireland, for example, does not have any representation in the 55-64 or 65+ age groups. There is also a heavy tilt toward respondents from USA in the 18-24 age group while all other age groups and the total % of respondents are dominated by respondents from the UK.
-
-
-```{r}
-ggplot(drug_consumption, aes(x = .panel_x, y = .panel_y, colour = gender_recode, fill = gender_recode)) + 
-  geom_jitter(alpha = 0.4, size = 1) +
-  geom_autodensity(alpha = 0.4, position = "identity") +
-  geom_smooth(aes(colour = NULL, fill = NULL), formula = y ~ x, method = "loess") + 
-  facet_matrix(vars(c("agreeableness_recode", "conscientiousness_recode",
-                      "extraversion_recode", "neuroticism_recode",
-                      "openess_recode", "impulsiveness_recode",
-                      "sensation_recode")),
-               layer.diag = 2, grid.y.diag = FALSE)
-```
-
-<br/> Firstly, looking distributions of female and male gender, we can see that the distribution of the agreeableness feature is skewed towards the higher end for the female respondents.
-
-Adversely, traits such as impulsiveness and sensation are skewed more toward to higher end of the scale in male respondents.
-
-When we look into the relationship between characteristics, extraversion and conscientiousness have a strong negative correlation. 
-
-Another obvious pattern we see is that neuroticism has a strong negative correlation with both conscientiousness and extraversion.
-
-Impulsiveness and sensation, on the other hand, have a strong positive correlation, which makes perfect common sense.
-
-```{r}
-# do some kmeans/hierarchial clustering analysis to find out what drugs show a usage pattern similar to heroin. Group these drugs together as our predicted case.
-
-usage_variables_numeric_only = as.matrix(drug_consumption[, c(usage_variables_numeric), with = F])
-
-usage_variables_numeric_only = t(usage_variables_numeric_only)
-
-within_sum_of_squares = c()
-between_sum_of_squares = c()
-total_sum_of_squares = c()
-
-results = list()
-
-for (my_repeat in 1:10){
-  
-  test_vector = 2:17
-  
-  for (k in test_vector) {
-    
-    kmeans_output = kmeans(usage_variables_numeric_only, 
-                           centers = k)
-    
-    within_sum_of_squares = c(within_sum_of_squares, kmeans_output$tot.withinss)
-    between_sum_of_squares = c(between_sum_of_squares, kmeans_output$betweenss)
-    total_sum_of_squares = c(total_sum_of_squares, kmeans_output$totss)
-    
-  }
-  
-  results[[my_repeat]] = data.table(my_repeat = my_repeat, 
-                                    k = test_vector, 
-                                    within = within_sum_of_squares, 
-                                    between = between_sum_of_squares)
-  
-}
-
-results = rbindlist(results)
-
-results = results[, j = .(within = mean(within),
-                          between = mean(between)), 
-                  by = .(k)]
-
-# I think this suggests we go for 8 clusters
-plot(diff(-results$within))
-plot(-results$within)
-
-clustering = kmeans(usage_variables_numeric_only, centers = 5)
-
-sort(clustering$cluster)
-```
-
-
-
-```{r}
-library("lattice")
-# Create heatmap of plots for cannabis vs. nicotine
-# Inspiration for this heatmap comes from the findings of the clustering analysis. These drugs belong to the same class and appear to be similar in that they both involve smoking
-
-cannabis_nictoine <- dcast(drug_consumption, cannabis_numeric ~ nicotine_numeric, fun.aggregate = length, value.var = "id")
-
-heat_can_nic <- as.matrix(cannabis_nictoine[,-1])
-colnames(heat_can_nic) <- c("0", "1", "2", "3", "4", "5", "6")
-rownames(heat_can_nic) <- c("0", "1", "2", "3", "4", "5", "6")
-levelplot(heat_can_nic, xlab="Cannabis", ylab="Nicotine", main="Cannabis vs. Nicotine Usage")
-
-```
-
-<br/> Interestingly, this plot shows us that there is a strong link between cannabis usage and nicotine usage, as seen by the strong color intensity in the bottom left and top right corners. Those who have smoked either cannabis or nicotine recently (class 6) are very likely to have smoked the other drug recently. Those who have not smoked one drug (class 0) are unlikely to have smoked the other drug.
-
-```{r}
+library(keras)
 library(caret)
+library(mltools)
 
-index_coke <- createDataPartition(drug_consumption$cocaine, p = .60, list = FALSE)
-train_coke <- drug_consumption[index_coke,]
-test_coke <- drug_consumption[-index_coke,]
-```
+ecstacy_CL <- c("ecstacy_CL0","ecstacy_CL1","ecstacy_CL2","ecstacy_CL3","ecstacy_CL4","ecstacy_CL5","ecstacy_CL6")
 
-The multinom function from nnet fits multinomial log-linear models via neural networks. A log-linear model is a model which makes it possible to apply multinomial linear regression.
+data <- data.frame(drug_consumption)[c(psych_variables,demographic_variables,ecstacy_CL)]
 
-```{r}
-require(nnet)
+inTrain <- createDataPartition(data$neuroticism, p = .60, list = FALSE)
+train_x <- data[inTrain, c(psych_variables,demographic_variables)]
+test_x <- data[-inTrain, c(psych_variables,demographic_variables)]
+train_y <- as.factor(data[inTrain, ecstacy_CL])
+test_y <- as.factor(data[-inTrain, ecstacy_CL])
 
-# Training the multinomial model for cocaine
-multinom_model.coke <- multinom(cocaine ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, data = train_coke)
-
-# Predict the class for test set for cocaine
-test_coke$ClassPredicted <- predict(multinom_model.coke, newdata = test_coke, "class")
-
-# Build classification table for cocaine
-class_tab.coke <- table(test_coke$cocaine, test_coke$ClassPredicted)
-```
-
-```{r}
-# Calculate accuracy for coke
-round((sum(diag(class_tab.coke))/sum(class_tab.coke))*100,2)
-
-# Show classification table
-print(class_tab.coke)
 
 
 ```
 
 ```{r}
-index_ecstacy <- createDataPartition(drug_consumption$ecstacy, p = .60, list = FALSE)
-train_ecstacy <- drug_consumption[index_ecstacy,]
-test_ecstacy <- drug_consumption[-index_ecstacy,]
-
-# Training the multinomial model for ecstacy
-multinom_model.ecstacy <- multinom(ecstacy ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, data = train_ecstacy)
-
-# Predict the class for test set for ecstacy
-test_ecstacy$ClassPredicted <- predict(multinom_model.ecstacy, newdata = test_ecstacy, "class")
-
-# Build classification table for ecstacy
-class_tab.ecstacy <- table(test_ecstacy$ecstacy, test_ecstacy$ClassPredicted)
+test_y
 ```
 
 ```{r}
-# Calculate accuracy for ecstacy
-round((sum(diag(class_tab.ecstacy))/sum(class_tab.ecstacy))*100,2)
+model <- keras_model_sequential() 
 
-# Show classification table
-print(class_tab.ecstacy)
+model %>% 
+  layer_dense(units = 256, activation = 'relu', input_shape = dim(train_x)[2]) %>% 
+  layer_dropout(rate = 0.4) %>% 
+  layer_dense(units = 128, activation = 'relu') %>%
+  layer_dropout(rate = 0.3) %>%
+  layer_dense(units = dim(train_y)[2], activation = 'softmax')
+
 ```
 
 ```{r}
-index_mushrooms<- createDataPartition(drug_consumption$mushrooms, p = .60, list = FALSE)
-train_mushrooms <- drug_consumption[index_mushrooms,]
-test_mushrooms <- drug_consumption[-index_mushrooms,]
+model %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics = c('accuracy')
+)
+```
 
-# Training the multinomial model for mushrooms
-multinom_model.mushrooms <- multinom(mushrooms ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, data = train_mushrooms)
+```{r}
+dim(train_y)
+```
 
-# Predict the class for test set for mushrooms
-test_mushrooms$ClassPredicted <- predict(multinom_model.mushrooms, newdata = test_mushrooms, "class")
-
-# Build classification table for mushrooms
-class_tab.mushrooms <- table(test_mushrooms$mushrooms, test_mushrooms$ClassPredicted)
-
-# Calculate accuracy for mushrooms
-round((sum(diag(class_tab.mushrooms))/sum(class_tab.mushrooms))*100,2)
-
-# Show classification table
-print(class_tab.mushrooms)
+```{r}
+model
 ```
 
 
 ```{r}
-# Implement one vs all approach
-model_alcohol_CL0 <- glm(formula = alcohol_CL0 ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, family=binomial(link="logit"), data = drug_consumption)
-
-model_alcohol_CL1 <- glm(formula = alcohol_CL1 ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, family=binomial(link="logit"), data = drug_consumption)
-
-model_alcohol_CL2 <- glm(formula = alcohol_CL2 ~ sensation + impulsiveness + openess + neuroticism + extraversion + conscientiousness + agreeableness + ethnicity + country + education + gender + age, family=binomial(link="logit"), data = drug_consumption)
+history <- model %>% fit(
+  train_x, train_y, 
+  epochs = 10, batch_size = 1, 
+  validation_split = 0.2
+)
 ```
 
+
 ```{r}
-fitted.results_alcohol_CL0 <- predict(model_alcohol_CL0, new_data = drug_consumption)
-fitted.results_alcohol_CL1 <- predict(model_alcohol_CL1, new_data = drug_consumption)
-fitted.results_alcohol_CL2 <- predict(model_alcohol_CL2, new_data = drug_consumption)
+model %>% predict_classes(x_test)
 ```
 
 
