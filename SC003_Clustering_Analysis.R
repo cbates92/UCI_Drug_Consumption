@@ -1,4 +1,4 @@
-#source("SC001_Data_Preparation.R")
+source("SC001_Data_Preparation.R")
 
 #==================================================================================================================================================================
 # TODO:
@@ -64,7 +64,6 @@
 #==================================================================================================================================================================
 
 # do some kmeans/hierarchial clustering analysis to find out what drugs show a usage pattern similar to heroin. Group these drugs together as our predicted case.
-
 usage_variables_numeric_only = as.matrix(drug_consumption[, c(usage_variables_numeric), with = F])
 
 usage_variables_numeric_only = t(usage_variables_numeric_only)
@@ -77,14 +76,15 @@ results_ss = list()
 
 cluster_dt_list = list()
 
-test_vector = 2:11
+test_vector = 2:15
 
 set.seed(230)
 
 for (k in test_vector) {
   
   kmeans_output = kmeans(usage_variables_numeric_only, 
-                         centers = k)
+                         centers = 4,
+                         nstart = 5)
   
   within_sum_of_squares = c(within_sum_of_squares, kmeans_output$tot.withinss)
   between_sum_of_squares = c(between_sum_of_squares, kmeans_output$betweenss)
@@ -112,17 +112,12 @@ for (k in test_vector) {
 
 results_ss = data.table(k = test_vector, 
                         within = within_sum_of_squares, 
-                        between = between_sum_of_squares)
+                        between = between_sum_of_squares,
+                        pct = between_sum_of_squares / total_sum_of_squares)
 
 results_ss[, ':=' (within_difference = c(-diff(within),NA))]
 
 results_ss = na.omit(results_ss)
-
-# ggplot(results_ss, aes(x = k, y = within)) + 
-#   geom_line() +
-#   geom_point() +
-#   scale_x_continuous(breaks = 2:10, minor_breaks = 2:10) +
-#   transition_reveal(along = k)
 
 #========================================================================================================================
 #========================================================================================================================
