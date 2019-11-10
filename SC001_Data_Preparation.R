@@ -180,4 +180,16 @@ for (variable_name in usage_variables){
   
 }
 
+#1) heroin or methadone rationalised.
+drug_consumption[, heroin_methadone_max := pmax(heroin_numeric, methadone_numeric)]
+drug_consumption[, heroin_methadone_rationalised := factor(case_when(heroin_methadone_max <= 1 ~ "a_never",
+                                                                     heroin_methadone_max <= 3 ~ "b_infrequent",
+                                                                     heroin_methadone_max <= 6 ~ "c_frequent"))]
 
+#2) alcohol or benzodiazepine rationalised.
+drug_consumption[, alcohol_benzodiazepine_max := pmax(alcohol_numeric, benzodiazepine_numeric)]
+drug_consumption[, alcohol_benzodiazepine_rationalised := factor(case_when(alcohol_benzodiazepine_max <= 1 ~ "a_never",
+                                                                           alcohol_benzodiazepine_max <= 3 ~ "b_infrequent",
+                                                                           alcohol_benzodiazepine_max <= 6 ~ "c_frequent"))]
+
+summary(drug_consumption$heroin_methadone_rationalised)
